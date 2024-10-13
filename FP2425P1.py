@@ -503,13 +503,15 @@ def escolhe_posicao_manual(tab):
         raise ValueError('escolhe_posicao_manual: argumento invalido')
     
     else:
+        dimensoes = obtem_dimensao(tab)
+        maximo_posicoes = dimensoes[0] * dimensoes[1]
+
         posicao_valida = False
         while not posicao_valida:
             pos = int(input('Turno do jogador. Escolha uma posicao livre: '))
-            try: # apanha o erro de validação
+            if 0 < pos <= maximo_posicoes:
                 posicao_valida = eh_posicao_livre(tab, pos)
-            except:
-                posicao_valida = False
+                
     return pos
 
 

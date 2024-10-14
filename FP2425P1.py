@@ -13,10 +13,16 @@ def eh_tabuleiro(tab): # Verifica se o argumento introduzido corresponde a um ta
 
     """
 
-    if not (2 <= len(tab) <= 100): # Verifica se o tabuleiro tem entre 2 a 100 linhas.
+    if not (isinstance(tab, tuple) or 2 <= len(tab) <= 100): # Verifica se o tabuleiro tem entre 2 a 100 linhas.
         return False
     
+    if not isinstance(tab[0], tuple):
+        return False
+
     expected_num_col = len(tab[0]) # Número de colunas expectável do tabuleiro.
+    if not (2 <= expected_num_col <= 100):
+        return False
+
     for linha in tab: 
         for elemento in linha:
             if elemento not in [-1, 0, 1]: # Verificar elementos das colunas
@@ -126,27 +132,52 @@ def obtem_diagonais(tab, pos):
     
     """
 
-    tamanho_linha = len(tab[0])
-    tamanho_coluna = len(tab)
-    max = tamanho_coluna * tamanho_linha
+    dimensoes = obtem_dimensao(tab)
+    tamanho_linha = dimensoes[1]
+    tamanho_coluna = dimensoes[0]
 
-    iniciais_diagonais = (tuple(range(1, tamanho_linha + 1))) # tuplo que contém todas as posições onde as diagonais começam.
-    for i in range(1, tamanho_coluna):
-        iniciais_diagonais += (i * tamanho_linha + 1,)
+    pos_index = ((pos - 1) // tamanho_linha, (pos - 1) % tamanho_linha)
 
-    iniciais_antidiagonais = tuple(range(max, max - tamanho_linha, -1)) # tuplo que contém todas as posições onde as diagonais começam.
-    for i in range(0, tamanho_coluna - 1):
-        iniciais_antidiagonais += (i * tamanho_linha + 1,)
+    pos_inicial_index = pos_index
+    fora_tab = False
+    # calcular posicao inicial
+    while not fora_tab:
+        pos_inicial_index = (pos_inicial_index[0] - 1, pos_inicial_index[1] - 1)
+        if not ( 0 <= pos_inicial_index[0] < tamanho_coluna and 0 <= pos_inicial_index[1] < tamanho_linha ):
+            fora_tab = True
 
+    pos_atual_index = pos_inicial_index
+    fora_tab = False
+    # criar diagonal
     tuplo_diagonais = ()
-    tuplo_antidiagonais = ()
-    for inicio in iniciais_diagonais: # Percorrer todas as diagonais para encontrar a posição pos.
-        if pos in tuple(range(inicio, max + 1, tamanho_linha + 1)): # Verificamos se a posição está na diagonal.
-            tuplo_diagonais = tuple(range(inicio, max + 1, tamanho_linha + 1))
+    while not fora_tab:
+        pos_atual_index = (pos_atual_index[0] + 1, pos_atual_index[1] + 1)
+        if not ( 0 <= pos_atual_index[0] < tamanho_coluna and 0 <= pos_atual_index[1] < tamanho_linha ):
+            fora_tab = True
+            continue
+        pos_nova = pos_atual_index[0] * tamanho_linha + pos_atual_index[1] + 1
+        tuplo_diagonais += (pos_nova, )
 
-    for inicio in iniciais_antidiagonais: # Percorrer todas as antidiagonais para encontrar a posição pos.
-        if pos in tuple(range(inicio, 0, - tamanho_linha + 1)): # Verificamos se a posição está na antidiagonal.
-            tuplo_antidiagonais = tuple(range(inicio, 0, - tamanho_linha + 1))
+    pos_inicial_index = pos_index
+    fora_tab = False
+    # calcular posicao inicial
+    while not fora_tab:
+        pos_inicial_index = (pos_inicial_index[0] + 1, pos_inicial_index[1] - 1)
+        if not ( 0 <= pos_inicial_index[0] < tamanho_coluna and 0 <= pos_inicial_index[1] < tamanho_linha ):
+            fora_tab = True
+
+    pos_atual_index = pos_inicial_index
+    fora_tab = False
+    # criar antidiagonal
+    tuplo_antidiagonais = ()
+    while not fora_tab:
+        pos_atual_index = (pos_atual_index[0] - 1, pos_atual_index[1] + 1)
+        if not ( 0 <= pos_atual_index[0] < tamanho_coluna and 0 <= pos_atual_index[1] < tamanho_linha ):
+            fora_tab = True
+            continue
+        pos_nova = pos_atual_index[0] * tamanho_linha + pos_atual_index[1] + 1
+        tuplo_antidiagonais += (pos_nova, )
+
     return (tuplo_diagonais, tuplo_antidiagonais)
 
 
@@ -476,12 +507,12 @@ def eh_fim_jogo(tab, k):
     dimensoes = obtem_dimensao(tab)
     posicoes_livres = obtem_posicoes_livres(tab)
 
-    if len(posicoes_livres) == 0:
+    if len(posicoes_livres) == 0: # Verifica que ainda há posições livres.
         return True
     
-    for posicao in range(1, dimensoes[0] * dimensoes[1] + 1):
+    for posicao in range(1, dimensoes[0] * dimensoes[1] + 1): # Percorre as posições do tabuleiro.
         for jog in (-1, 1):
-            ganhou = verifica_k_linhas(tab, posicao, jog, k)
+            ganhou = verifica_k_linhas(tab, posicao, jog, k) # Verifica se o jogador ganhou.
             if ganhou:
                 return True
     
@@ -492,7 +523,7 @@ def escolhe_posicao_manual(tab):
  
     """
     
-    A função escolhe_posicao_manual recebe um argumento tab e devolve a posição escolhida, manualmente, pelo jogador.
+    A função escolhe_posicao_manual recebe um argumento (tab) e devolve a posição escolhida, manualmente, pelo jogador.
     A função deve apresentar uma mensagem ao jogador a solicitar a posição desejada.
     A mensagem aparece até que o jogador introduza uma posição livre.
     A função apresenta a posição escolhida pelo jogador.
@@ -506,12 +537,12 @@ def escolhe_posicao_manual(tab):
         dimensoes = obtem_dimensao(tab)
         maximo_posicoes = dimensoes[0] * dimensoes[1]
 
-        posicao_valida = False
-        while not posicao_valida:
-            pos = int(input('Turno do jogador. Escolha uma posicao livre: '))
+        posicao_valida = False # Inicialização da variável que verifica se a posição é válida.
+        while not posicao_valida: 
+            pos = eval(input('Turno do jogador. Escolha uma posicao livre: ')) # Mensagem ao jogador.
             if 0 < pos <= maximo_posicoes:
-                posicao_valida = eh_posicao_livre(tab, pos)
-                
+                posicao_valida = eh_posicao_livre(tab, pos) # Verificação da posição introduzida.
+
     return pos
 
 
@@ -536,61 +567,158 @@ def escolhe_posicao_auto(tab, jog, k, lvl):
 
             """
             
-            A função escolhe_estratégia_aux é uma função auxiliar que define cada uma das três estratégias possíveis.
-            Na estratégia fácil, o jogador escolhe uma posição livre adjacente à sua.
-            Na estratégia normal, o jogador que tenha peças consecutivas (menores que k):
-                - Escolhe uma posição livre adjacente à sua, que lhe permita ganhar;
-                - Caso contrário, escolhe uma posição livre adjacente à do adversário.
-            Na estratégia difícil, o jogador 
-            
+            A função estrategia_escolhida_facil é uma função auxiliar à função escolhe_posicao_auto.
+            A função devolve uma posição livre do tabuleiro, escolhida de acordo com a estratégia fácil.
+            A estratégia fácil consiste em escolher uma posição livre do tabuleiro, que seja adjacente à sua posição.
+            Sempre que houver mais do que uma posição que cumpra um dos critérios definidos, deve escolher a posição mais próxima da posição central do tabuleiro.
+                
             """
-            posicoes_jog = obtem_posicoes_jogador(tab, jog)
-            tuplo_posicoes_adj_jog = ()
+
+            posicoes_jog = obtem_posicoes_jogador(tab, jog) # Obter as posições do jogador. 
+            tuplo_posicoes_adj_jog = () # Tuplo que vai conter as posições adjacentes às posições do jogador. 
             for posicao_jog in posicoes_jog:
-                posicoes_adj_jog = obtem_posicoes_adjacentes(tab, posicao_jog)
+                posicoes_adj_jog = obtem_posicoes_adjacentes(tab, posicao_jog) # Obter as posições adjacentes às posições do jogador.
                 for posicao_adj_jog in posicoes_adj_jog:
-                    if eh_posicao_livre(tab, posicao_adj_jog):
+                    if eh_posicao_livre(tab, posicao_adj_jog): # Verificar se a posição adjacente está livre.
                         tuplo_posicoes_adj_jog += (posicao_adj_jog,)
-                    
-            return tuplo_posicoes_adj_jog
+
+            if len(tuplo_posicoes_adj_jog) != 0:     
+                return tuplo_posicoes_adj_jog
+            return obtem_posicoes_livres(tab)
     
 
         def estrategia_escolhida_normal():
-            tuplo_posicoes_l = ()
-            tuplo_posicoes_adv = ()
+
+            """
+
+            A função estrategia_escolhida_normal é uma função auxiliar à função escolhe_posicao_auto.
+            A função devolve uma posição livre do tabuleiro, escolhida de acordo com a estratégia normal.
+            A estratégia normal consiste em escolher uma das seguintes opções possíveis:
+                - Escolher uma posição que lhe permita obter l pedras consecutivas e ganhar o jogo, com l < K.
+                - Escolher uma posição que impeça o adversário de obter l pedras consecutivas e ganhar o jogo, com l < K.
+
+            """
+
+            tuplo_posicoes_l = () 
+            tuplo_posicoes_adv = () 
             posicoes_livres = obtem_posicoes_livres(tab)
-            for l in range(k, 0, -1):
+
+            for l in range(k, 0, -1): # Percorrer as valores de l, que vão de k até 1.
                 for posicao_livre in posicoes_livres:
 
+                    # Caso do jogador:
                     tabuleiro_hipotetico = marca_posicao(tab, posicao_livre, jog)
-                    chegou_ao_l = verifica_k_linhas(tabuleiro_hipotetico, posicao_livre, jog, l) 
+                    chegou_ao_l = verifica_k_linhas(tabuleiro_hipotetico, posicao_livre, jog, l) # Verificar se chegou a l peças.
                     if chegou_ao_l:
-                        tuplo_posicoes_l += (posicao_livre, )
+                        tuplo_posicoes_l += (posicao_livre, ) # Adicionar a posição ao tuplo.
 
+                    # Caso do adversário:
                     tabuleiro_hipotetico_adv = marca_posicao(tab, posicao_livre, - jog)
                     chegou_ao_l_adv = verifica_k_linhas(tabuleiro_hipotetico_adv, posicao_livre, -jog, l)
                     if chegou_ao_l_adv:
                         tuplo_posicoes_adv += (posicao_livre, )
 
-                if len(tuplo_posicoes_l) != 0: # Não retoirnar tuplo vazio
+                if len(tuplo_posicoes_l) != 0: # Serve para não retornar um tuplo vazio para as posições do jogador.
                     return tuplo_posicoes_l
-                elif len(tuplo_posicoes_adv) != 0:
+                elif len(tuplo_posicoes_adv) != 0: # Serve para não retornar um tuplo vazio para as posições do adversário.
                     return tuplo_posicoes_adv
 
             return ()
-
         
+        def estrategia_escolhida_dificil():
+
+            """
+            
+            A função estrategia_escolhida_dificil é uma função auxiliar à função escolhe_posicao_auto.
+            A função devolve uma posição livre do tabuleiro, escolhida de acordo com a estratégia difícil.
+            A estratégia difícil consiste em escolher uma das seguintes opções possíveis:
+            - Escolher uma posição que lhe permita obter k pedras consecutivas e ganhar o jogo.
+            - Escolher uma posição que impeça o adversário de obter k pedras consecutivas e ganhar o jogo.
+            - Simular um jogo inteiro, escolhendo uma posição livre e jogando com estratégia normal:
+                - Se com esta posição o jogador ganhar, escolhe essa posição.
+                - Se com esta posição o jogo empatar, escolhe outra posição.
+                - Caso contrário, escolhe uma posição livre.
+            Sempre que houver mais do que uma posição que cumpra um dos critérios definidos, deve escolher a posição mais próxima da posição central do tabuleiro.
+                
+            """
+
+            def simula_jogo(tabuleiro_inicial, jog_simulado): # Simulação do jogo
+
+                """
+                
+                A função simula_jogo é uma função auxiliar à função estrategia_escolhida_dificil.
+                A função devolve a posição escolhida para jogador, após simular um jogo inteiro.
+                
+                """
+                ultima_pos_escolhida = -1
+                tabuleiro_atual = tabuleiro_inicial
+                jog_atual = - jog_simulado
+
+                while not eh_fim_jogo(tabuleiro_atual, k):
+                    pos_escolhida_simulada = escolhe_posicao_auto(tabuleiro_atual, jog_atual, k, "normal")
+
+                    # atualizar variaveis de controlo
+                    ultima_pos_escolhida = pos_escolhida_simulada
+                    tabuleiro_atual = marca_posicao(tabuleiro_atual, pos_escolhida_simulada, jog_atual)
+                    jog_atual = -jog_atual
+
+                if len(obtem_posicoes_livres(tabuleiro_atual)) == 0:
+                    return 'EMPATE'
+                if verifica_k_linhas(tabuleiro_atual, ultima_pos_escolhida, jog_simulado, k):
+                    return 'VITORIA'
+                return 'DERROTA'
+
+            posicoes_livres = obtem_posicoes_livres(tab)
+
+            tuplo_posicoes_K_jog = ()
+            for posicao_livre in posicoes_livres:
+                tabuleiro_hipotetico = marca_posicao(tab, posicao_livre, jog)
+                jog_chegou_ao_k = verifica_k_linhas(tabuleiro_hipotetico, posicao_livre, jog, k) # Verificar se chega a k peças.
+                if jog_chegou_ao_k:
+                    tuplo_posicoes_K_jog += (posicao_livre, ) # Adicionar a posição ao tuplo.
+            if len(tuplo_posicoes_K_jog) != 0:
+                return tuplo_posicoes_K_jog
+
+            tuplo_posicoes_K_adv = ()
+            for posicao_livre in posicoes_livres:
+                tabuleiro_hipotetico = marca_posicao(tab, posicao_livre, -jog)
+                adv_chegou_ao_k = verifica_k_linhas(tabuleiro_hipotetico, posicao_livre, -jog, k) # Verificar se o adversário chega a k peças.
+                if adv_chegou_ao_k:
+                    tuplo_posicoes_K_adv += (posicao_livre, ) # Adicionar a posição ao tuplo.
+            if len(tuplo_posicoes_K_adv) != 0:
+                return tuplo_posicoes_K_adv
+
+            tuplo_posicoes_simulacao_ganho = ()
+            tuplo_posicoes_simulacao_empate = ()
+            for posicao_livre in posicoes_livres:
+                tabuleiro_hipotetico = marca_posicao(tab, posicao_livre, jog)
+                resultado = simula_jogo(tabuleiro_hipotetico, jog)
+                if resultado == "VITORIA":
+                    tuplo_posicoes_simulacao_ganho += (posicao_livre, )
+                elif resultado == "EMPATE":
+                    tuplo_posicoes_simulacao_empate += (posicao_livre, )
+            if len(tuplo_posicoes_simulacao_ganho) != 0:
+                return tuplo_posicoes_simulacao_ganho
+            elif len(tuplo_posicoes_simulacao_empate) != 0:
+                return tuplo_posicoes_simulacao_empate
+
+            return posicoes_livres
+
+
         possibilidades = ()
         if lvl == "facil":
             possibilidades = estrategia_escolhida_facil()
         elif lvl == "normal":
             possibilidades = estrategia_escolhida_normal()
+        elif lvl == "dificil":
+            possibilidades = estrategia_escolhida_dificil()
+
+        posicao_escolhida_auto = ordena_posicoes_tabuleiro(tab, possibilidades)[0] # Escolher a posição mais próxima da posição central.
         
-        return ordena_posicoes_tabuleiro(tab, possibilidades)[0]
+        return posicao_escolhida_auto
     
     
-    
-def jogo_mnk(cfg, jog, lvl):
+def jogo_mnk(cfg, jog, lvl): # jog é jogador humano
 
     """
 
@@ -614,6 +742,43 @@ def jogo_mnk(cfg, jog, lvl):
     if not condicao_esperada:
         raise ValueError('jogo_mnk: argumentos invalidos')
     
-    else:
-        pass
-    pass
+    else:            
+        print("Bem-vindo ao JOGO MNK.")
+        if jog == 1:
+            print("O jogador joga com 'X'.")
+        else:
+            print("O jogador joga com 'O'.")
+        
+        tab_atual = ((0,) * cfg[1],) * cfg[0] # Criação do tabuleiro com todas as posições livres.
+        jogador_atual = 1
+        ultima_pos_escolhida = None
+        
+        representacao_tab_inicio = tabuleiro_para_str(tab_atual) # Representação do tabuleiro inicial.
+        print(representacao_tab_inicio)
+        
+        while not eh_fim_jogo(tab_atual, cfg[2]): # Enquanto o jogo não terminar.
+
+            if jog == jogador_atual:
+                escolha_posicao_jog = escolhe_posicao_manual(tab_atual) # Escolha da posição pelo jogador.
+                ultima_pos_escolhida = escolha_posicao_jog
+                tab_atual = marca_posicao(tab_atual, escolha_posicao_jog, jog) # Marcação da posição escolhida pelo jogador.
+            
+            else:
+                print(f"Turno do computador ({lvl}):")
+                posicao_auto = escolhe_posicao_auto(tab_atual, -jog, cfg[2], lvl)
+                ultima_pos_escolhida = posicao_auto
+                tab_atual = marca_posicao(tab_atual, posicao_auto, -jog)
+            
+            print(tabuleiro_para_str(tab_atual))
+
+            jogador_atual = - jogador_atual
+
+        if len(obtem_posicoes_livres(tab_atual)) == 0:
+            print('EMPATE')
+            return 0
+        elif verifica_k_linhas(tab_atual, ultima_pos_escolhida, jog, cfg[2]):
+            print('VITORIA')
+            return jog
+        else:
+            print('DERROTA')
+            return -jog

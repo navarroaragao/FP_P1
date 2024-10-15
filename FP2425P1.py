@@ -13,10 +13,10 @@ def eh_tabuleiro(tab): # Verifica se o argumento introduzido corresponde a um ta
 
     """
 
-    if not (isinstance(tab, tuple) or 2 <= len(tab) <= 100): # Verifica se o tabuleiro tem entre 2 a 100 linhas.
+    if not (isinstance(tab, tuple) and 2 <= len(tab) <= 100): # Verifica se o tabuleiro tem entre 2 a 100 linhas.
         return False
     
-    if not isinstance(tab[0], tuple):
+    if not isinstance(tab[0], tuple) :
         return False
 
     expected_num_col = len(tab[0]) # Número de colunas expectável do tabuleiro.
@@ -128,6 +128,8 @@ def obtem_diagonais(tab, pos):
     
     A função obtem_diagonais recebe dois argumentos: (tab e pos).
     Devolve dois tuplos: O primeiro tuplo contém todos os elementos da diagonal onde se encontra a posição (pos);
+    Para calcular uma diagonal, temos de somar uma linha e uma coluna à posição (pos) até chegarmos ao limite do tabuleiro;
+    Para calcular uma antidiagonal, temos de subtrair uma linha e uma coluna à posição (pos) até chegarmos ao limite do tabuleiro;
     O segundo tuplo contém todos os elementos da antidiagonal onde se encontra a posição (pos).
     
     """
@@ -136,31 +138,34 @@ def obtem_diagonais(tab, pos):
     tamanho_linha = dimensoes[1]
     tamanho_coluna = dimensoes[0]
 
-    pos_index = ((pos - 1) // tamanho_linha, (pos - 1) % tamanho_linha)
+    pos_index = ((pos - 1) // tamanho_linha, (pos - 1) % tamanho_linha) # tuplo com os índices da linha da posição (pos) e da coluna da posição (pos).
 
     pos_inicial_index = pos_index
     fora_tab = False
+
     # calcular posicao inicial
     while not fora_tab:
-        pos_inicial_index = (pos_inicial_index[0] - 1, pos_inicial_index[1] - 1)
-        if not ( 0 <= pos_inicial_index[0] < tamanho_coluna and 0 <= pos_inicial_index[1] < tamanho_linha ):
+        pos_inicial_index = (pos_inicial_index[0] - 1, pos_inicial_index[1] - 1) 
+        if not ( 0 <= pos_inicial_index[0] < tamanho_coluna and 0 <= pos_inicial_index[1] < tamanho_linha ): # Verificar se o índice está dentro dos limites.
             fora_tab = True
 
     pos_atual_index = pos_inicial_index
     fora_tab = False
+
     # criar diagonal
     tuplo_diagonais = ()
     while not fora_tab:
         pos_atual_index = (pos_atual_index[0] + 1, pos_atual_index[1] + 1)
         if not ( 0 <= pos_atual_index[0] < tamanho_coluna and 0 <= pos_atual_index[1] < tamanho_linha ):
             fora_tab = True
-            continue
-        pos_nova = pos_atual_index[0] * tamanho_linha + pos_atual_index[1] + 1
+            continue # Interrompe a iteração atual e continua para a próxima iteração
+        pos_nova = pos_atual_index[0] * tamanho_linha + pos_atual_index[1] + 1 # Conversão dos índices da linha e da coluna para a posição.
         tuplo_diagonais += (pos_nova, )
 
     pos_inicial_index = pos_index
     fora_tab = False
-    # calcular posicao inicial
+
+    # calcular posicao inicial 
     while not fora_tab:
         pos_inicial_index = (pos_inicial_index[0] + 1, pos_inicial_index[1] - 1)
         if not ( 0 <= pos_inicial_index[0] < tamanho_coluna and 0 <= pos_inicial_index[1] < tamanho_linha ):
@@ -168,10 +173,11 @@ def obtem_diagonais(tab, pos):
 
     pos_atual_index = pos_inicial_index
     fora_tab = False
+
     # criar antidiagonal
     tuplo_antidiagonais = ()
     while not fora_tab:
-        pos_atual_index = (pos_atual_index[0] - 1, pos_atual_index[1] + 1)
+        pos_atual_index = (pos_atual_index[0] - 1, pos_atual_index[1] + 1) # Atualização dos índices da linha e da coluna, contrário das diagonais, fazemos menos uma linha.
         if not ( 0 <= pos_atual_index[0] < tamanho_coluna and 0 <= pos_atual_index[1] < tamanho_linha ):
             fora_tab = True
             continue

@@ -240,12 +240,12 @@ def eh_posicao_valida(tab, pos):
     
     """
 
-    if eh_tabuleiro(tab) and type(pos) == int:
-        if 1 <= pos <= len(tab) * len(tab[0]): # Verifica se a posição está dentro dos limites do tabuleiro.
-            return True
-    else:
+    if not(eh_tabuleiro(tab) and type(pos) == int and (1 <= pos <= 100 * 100)): # Verifica se o argumento é um tabuleiro e se a posição é um inteiro.
         raise ValueError('eh_posicao_valida: argumentos invalidos')
     
+    else:
+        if 1 <= pos <= len(tab) * len(tab[0]): # Verifica se a posição está dentro dos limites do tabuleiro.
+            return True
     
 def eh_posicao_livre(tab, pos):
 
@@ -298,7 +298,7 @@ def obtem_posicoes_jogador(tab, jog):
     
     """
 
-    if not eh_tabuleiro(tab) or not type(jog) == int or not (jog in [-1, 0, 1]):
+    if not eh_tabuleiro(tab) or not type(jog) == int or not (jog in [-1, 1]):
         raise ValueError('obtem_posicoes_jogador: argumentos invalidos')
     else:
         tuplo_posicoes = ()  
@@ -807,4 +807,4 @@ def jogo_mnk(cfg, jog, lvl): # jog é jogador humano
         else:
             print('EMPATE')
             return 0
-        
+    

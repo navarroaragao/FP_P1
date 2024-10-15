@@ -24,8 +24,12 @@ def eh_tabuleiro(tab): # Verifica se o argumento introduzido corresponde a um ta
         return False
 
     for linha in tab: 
+        if not isinstance(linha, tuple): # Verificar se o tabuleiro é composto por tuplos.
+            return False
+        
         for elemento in linha:
-            if elemento not in [-1, 0, 1]: # Verificar elementos das colunas
+
+            if elemento not in [-1, 0, 1] or not type(elemento) == int: # Verificar elementos das colunas
                 return False
         if len(linha) != expected_num_col: # Verificar se o número de colunas é igual em todas as linhas.
             return False
@@ -661,57 +665,60 @@ def escolhe_posicao_auto(tab, jog, k, lvl):
                 jog_atual = - jog_simulado
 
                 while not eh_fim_jogo(tabuleiro_atual, k):
-                    pos_escolhida_simulada = escolhe_posicao_auto(tabuleiro_atual, jog_atual, k, "normal")
+                    pos_escolhida_simulada = escolhe_posicao_auto(tabuleiro_atual, jog_atual, k, "normal") # Escolher a posição com base na estratégia normal.
 
                     # atualizar variaveis de controlo
-                    ultima_pos_escolhida = pos_escolhida_simulada
-                    tabuleiro_atual = marca_posicao(tabuleiro_atual, pos_escolhida_simulada, jog_atual)
+                    ultima_pos_escolhida = pos_escolhida_simulada # Atualização da última posição escolhida.
+                    tabuleiro_atual = marca_posicao(tabuleiro_atual, pos_escolhida_simulada, jog_atual) 
                     jog_atual = -jog_atual
 
-                if len(obtem_posicoes_livres(tabuleiro_atual)) == 0:
+                if len(obtem_posicoes_livres(tabuleiro_atual)) == 0: # Verificar se não há posições livres, determina se resultou empate
                     return 'EMPATE'
-                if verifica_k_linhas(tabuleiro_atual, ultima_pos_escolhida, jog_simulado, k):
+                if verifica_k_linhas(tabuleiro_atual, ultima_pos_escolhida, jog_simulado, k): 
                     return 'VITORIA'
                 return 'DERROTA'
+            
 
             posicoes_livres = obtem_posicoes_livres(tab)
 
             tuplo_posicoes_K_jog = ()
             for posicao_livre in posicoes_livres:
                 tabuleiro_hipotetico = marca_posicao(tab, posicao_livre, jog)
-                jog_chegou_ao_k = verifica_k_linhas(tabuleiro_hipotetico, posicao_livre, jog, k) # Verificar se chega a k peças.
-                if jog_chegou_ao_k:
+                if verifica_k_linhas(tabuleiro_hipotetico, posicao_livre, jog, k): # Verificar se chega a k peças.
                     tuplo_posicoes_K_jog += (posicao_livre, ) # Adicionar a posição ao tuplo.
             if len(tuplo_posicoes_K_jog) != 0:
-                return tuplo_posicoes_K_jog
+                return tuplo_posicoes_K_jog # Retorna as posições que permitem ao jogador ganhar.
 
             tuplo_posicoes_K_adv = ()
             for posicao_livre in posicoes_livres:
                 tabuleiro_hipotetico = marca_posicao(tab, posicao_livre, -jog)
-                adv_chegou_ao_k = verifica_k_linhas(tabuleiro_hipotetico, posicao_livre, -jog, k) # Verificar se o adversário chega a k peças.
-                if adv_chegou_ao_k:
+                if verifica_k_linhas(tabuleiro_hipotetico, posicao_livre, -jog, k): # Verificar se o adversário chega a k peças.
                     tuplo_posicoes_K_adv += (posicao_livre, ) # Adicionar a posição ao tuplo.
             if len(tuplo_posicoes_K_adv) != 0:
-                return tuplo_posicoes_K_adv
+                return tuplo_posicoes_K_adv # Retorna as posições que permitem ao adversário ganhar.
 
             tuplo_posicoes_simulacao_ganho = ()
             tuplo_posicoes_simulacao_empate = ()
             for posicao_livre in posicoes_livres:
                 tabuleiro_hipotetico = marca_posicao(tab, posicao_livre, jog)
                 resultado = simula_jogo(tabuleiro_hipotetico, jog)
+
                 if resultado == "VITORIA":
-                    tuplo_posicoes_simulacao_ganho += (posicao_livre, )
+                    tuplo_posicoes_simulacao_ganho += (posicao_livre, ) # posições que permitem ao jogador ganhar.
+
                 elif resultado == "EMPATE":
-                    tuplo_posicoes_simulacao_empate += (posicao_livre, )
+                    tuplo_posicoes_simulacao_empate += (posicao_livre, ) # posições que permitem ao jogo empatar.
+
             if len(tuplo_posicoes_simulacao_ganho) != 0:
                 return tuplo_posicoes_simulacao_ganho
             elif len(tuplo_posicoes_simulacao_empate) != 0:
                 return tuplo_posicoes_simulacao_empate
 
-            return posicoes_livres
+            return posicoes_livres 
 
 
         possibilidades = ()
+        # Posições correspondentes à estratégia escolhida.
         if lvl == "facil":
             possibilidades = estrategia_escolhida_facil()
         elif lvl == "normal":
@@ -723,6 +730,7 @@ def escolhe_posicao_auto(tab, jog, k, lvl):
         
         return posicao_escolhida_auto
     
+
     
 def jogo_mnk(cfg, jog, lvl): # jog é jogador humano
 
@@ -748,6 +756,8 @@ def jogo_mnk(cfg, jog, lvl): # jog é jogador humano
     if not condicao_esperada:
         raise ValueError('jogo_mnk: argumentos invalidos')
     
+
+    
     else:            
         print("Bem-vindo ao JOGO MNK.")
         if jog == 1:
@@ -755,36 +765,40 @@ def jogo_mnk(cfg, jog, lvl): # jog é jogador humano
         else:
             print("O jogador joga com 'O'.")
         
-        tab_atual = ((0,) * cfg[1],) * cfg[0] # Criação do tabuleiro com todas as posições livres.
+        tab_atual = ((0,) * cfg[1],) * cfg[0] # Criação do tabuleiro em que todas as posições estão livres.
         jogador_atual = 1
-        ultima_pos_escolhida = None
+        ultima_pos_escolhida = None # Ainda não foi escolhida nenhuma posição.
         
         representacao_tab_inicio = tabuleiro_para_str(tab_atual) # Representação do tabuleiro inicial.
         print(representacao_tab_inicio)
         
+
         while not eh_fim_jogo(tab_atual, cfg[2]): # Enquanto o jogo não terminar.
 
-            if jog == jogador_atual:
-                escolha_posicao_jog = escolhe_posicao_manual(tab_atual) # Escolha da posição pelo jogador.
+            if jog == jogador_atual: # Ronda do jogador humano
+                escolha_posicao_jog = escolhe_posicao_manual(tab_atual) # Escolha da posição pelo jogador - manualmente.
                 ultima_pos_escolhida = escolha_posicao_jog
-                tab_atual = marca_posicao(tab_atual, escolha_posicao_jog, jog) # Marcação da posição escolhida pelo jogador.
+                tab_atual = marca_posicao(tab_atual, escolha_posicao_jog, jog) # Marcação da posição escolhida pelo jogador, manualmente.
             
-            else:
-                print(f"Turno do computador ({lvl}):")
-                posicao_auto = escolhe_posicao_auto(tab_atual, -jog, cfg[2], lvl)
+            else: # Ronda do jogador automático
+                print(f"Turno do computador ({lvl}):") # Turno do computador.
+                posicao_auto = escolhe_posicao_auto(tab_atual, -jog, cfg[2], lvl) # Escolha da posição pelo computador - de acordo com a estratégia escolhida.
                 ultima_pos_escolhida = posicao_auto
-                tab_atual = marca_posicao(tab_atual, posicao_auto, -jog)
+                tab_atual = marca_posicao(tab_atual, posicao_auto, -jog) 
             
-            print(tabuleiro_para_str(tab_atual))
+            print(tabuleiro_para_str(tab_atual)) # Representação do tabuleiro após a marcação da posição.
 
-            jogador_atual = - jogador_atual
+            jogador_atual = - jogador_atual # Alternância dos jogadores.
 
-        if len(obtem_posicoes_livres(tab_atual)) == 0:
+        # Resultado final do jogo.
+        if len(obtem_posicoes_livres(tab_atual)) == 0: 
             print('EMPATE')
             return 0
+        
         elif verifica_k_linhas(tab_atual, ultima_pos_escolhida, jog, cfg[2]):
             print('VITORIA')
             return jog
+        
         else:
             print('DERROTA')
             return -jog

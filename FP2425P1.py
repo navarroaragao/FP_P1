@@ -246,6 +246,8 @@ def eh_posicao_valida(tab, pos):
     else:
         if 1 <= pos <= len(tab) * len(tab[0]): # Verifica se a posição está dentro dos limites do tabuleiro.
             return True
+        return False
+    
     
 def eh_posicao_livre(tab, pos):
 

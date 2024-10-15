@@ -45,7 +45,7 @@ def eh_posicao(num_p):
     O máximo de posições possíveis é 100*100, uma vez que o tabuleiro tem de ter entre 2 a 100 linhas e entre 2 a 100 colunas.
 
     """
-    return isinstance(num_p, int) and 1 <= num_p <= 100 * 100 
+    return type(num_p) == int and 1 <= num_p <= 100 * 100 
 
 
 def obtem_dimensao(tab): 
@@ -240,7 +240,7 @@ def eh_posicao_valida(tab, pos):
     
     """
 
-    if eh_tabuleiro(tab) and isinstance(pos, int):
+    if eh_tabuleiro(tab) and type(pos) == int:
         if 1 <= pos <= len(tab) * len(tab[0]): # Verifica se a posição está dentro dos limites do tabuleiro.
             return True
     else:
@@ -256,7 +256,7 @@ def eh_posicao_livre(tab, pos):
     Os argumentos têm que ser validados antes de serem utilizados na função.
 
     """
-    if not eh_tabuleiro(tab) or not eh_posicao_valida(tab, pos):
+    if not eh_posicao_valida(tab, pos):
         raise ValueError('eh_posicao_livre: argumentos invalidos')
     
     dimensoes = obtem_dimensao(tab)
@@ -298,7 +298,7 @@ def obtem_posicoes_jogador(tab, jog):
     
     """
 
-    if not eh_tabuleiro(tab) or not (jog in [-1, 0, 1]):
+    if not eh_tabuleiro(tab) or not type(jog) == int or not (jog in [-1, 0, 1]):
         raise ValueError('obtem_posicoes_jogador: argumentos invalidos')
     else:
         tuplo_posicoes = ()  
@@ -322,13 +322,15 @@ def obtem_posicoes_adjacentes(tab, pos):
 
     """
 
-    dimensoes = obtem_dimensao(tab) # Obter as dimensões do tabuleiro, recorrendo à função obtem_dimensao.
-    max_posicao = dimensoes[0] * dimensoes[1]
 
-    if not (eh_tabuleiro(tab) and isinstance(pos, int) and (1 <= pos <= max_posicao)):
+    if not (eh_tabuleiro(tab) and eh_posicao_valida(tab, pos)):
         raise ValueError('obtem_posicoes_adjacentes: argumentos invalidos')
     
     else:
+
+        dimensoes = obtem_dimensao(tab) # Obter as dimensões do tabuleiro, recorrendo à função obtem_dimensao.
+        max_posicao = dimensoes[0] * dimensoes[1]
+    
         tuplo_adjacentes = ()
         tamanho_linha = len(tab[0])
 
@@ -362,7 +364,7 @@ def ordena_posicoes_tabuleiro(tab, tup):
     """
 
 
-    if not (eh_tabuleiro(tab) and isinstance(tup, tuple)):
+    if not (eh_tabuleiro(tab) and isinstance(tup, tuple) and all([eh_posicao_valida(tab, pos) for pos in tup])):
         raise ValueError('ordena_posicoes_tabuleiro: argumentos invalidos')
     else:
         dimensao = obtem_dimensao(tab) # Obter as dimensões do tabuleiro, recorrendo à função obtem_dimensao.
@@ -417,7 +419,7 @@ def marca_posicao(tab, pos, jog):
     Os argumentos têm que ser validados antes de serem utilizados na função. 
 
     """
-    condicao_validacao_tab = eh_tabuleiro(tab) and eh_posicao_livre(tab, pos) and (jog in (-1, 1))
+    condicao_validacao_tab = eh_tabuleiro(tab) and eh_posicao_valida(tab,pos) and eh_posicao_livre(tab, pos) and (jog in (-1, 1))
     if not condicao_validacao_tab:
         raise ValueError('marca_posicao: argumentos invalidos')
 
@@ -456,7 +458,7 @@ def verifica_k_linhas(tab, pos, jog, k):
     
     """
 
-    if not (eh_tabuleiro(tab) and eh_posicao_valida(tab, pos) and (jog in (-1, 1)) and isinstance(k, int) and k > 0):
+    if not (eh_tabuleiro(tab) and eh_posicao_valida(tab, pos) and type(jog) == int and (jog in (-1, 1)) and type(k) == int and k > 0):
         raise ValueError('verifica_k_linhas: argumentos invalidos')
     
     else:
@@ -511,7 +513,7 @@ def eh_fim_jogo(tab, k):
     
     """
 
-    if not (eh_tabuleiro(tab) and isinstance(k, int) and k > 0):
+    if not (eh_tabuleiro(tab) and type(k) == int and k > 0):
         raise ValueError('eh_fim_jogo: argumentos invalidos')
     
     dimensoes = obtem_dimensao(tab)
@@ -568,7 +570,7 @@ def escolhe_posicao_auto(tab, jog, k, lvl):
     
     """
     estrategias = ("facil", "normal", "dificil")
-    condicao_validacao = eh_tabuleiro(tab) and (jog in (-1, 1)) and isinstance(k, int) and k > 0 and lvl in estrategias
+    condicao_validacao = eh_tabuleiro(tab) and (type(jog) == int) and (jog in (-1, 1)) and (type(k) == int) and (k > 0) and (lvl in estrategias)
     if not condicao_validacao:
         raise ValueError('escolhe_posicao_auto: argumentos invalidos')
     
@@ -672,12 +674,14 @@ def escolhe_posicao_auto(tab, jog, k, lvl):
                     tabuleiro_atual = marca_posicao(tabuleiro_atual, pos_escolhida_simulada, jog_atual) 
                     jog_atual = -jog_atual
 
-                if len(obtem_posicoes_livres(tabuleiro_atual)) == 0: # Verificar se não há posições livres, determina se resultou empate
-                    return 'EMPATE'
                 if verifica_k_linhas(tabuleiro_atual, ultima_pos_escolhida, jog_simulado, k): 
-                    return 'VITORIA'
-                return 'DERROTA'
-            
+                    return 'VITORIA'                
+                elif verifica_k_linhas(tabuleiro_atual, ultima_pos_escolhida, -jog_simulado, k):
+                    return 'DERROTA'
+                else:
+                    return 'EMPATE'
+
+ 
 
             posicoes_livres = obtem_posicoes_livres(tab)
 
@@ -751,7 +755,7 @@ def jogo_mnk(cfg, jog, lvl): # jog é jogador humano
     
     """
 
-    condicao_esperada = isinstance(cfg, tuple) and len(cfg) == 3 and isinstance(jog, int) and (jog in (-1, 1)) and isinstance(lvl, str)
+    condicao_esperada = isinstance(cfg, tuple) and len(cfg) == 3 and type(jog) == int and (jog in (-1, 1)) and isinstance(lvl, str)
 
     if not condicao_esperada:
         raise ValueError('jogo_mnk: argumentos invalidos')
@@ -791,14 +795,16 @@ def jogo_mnk(cfg, jog, lvl): # jog é jogador humano
             jogador_atual = - jogador_atual # Alternância dos jogadores.
 
         # Resultado final do jogo.
-        if len(obtem_posicoes_livres(tab_atual)) == 0: 
+
+        
+        if verifica_k_linhas(tab_atual, ultima_pos_escolhida, jog, cfg[2]):
+            print('VITORIA')
+            return jog
+        elif verifica_k_linhas(tab_atual, ultima_pos_escolhida, -jog, cfg[2]):
+            print('DERROTA')    
+            return -jog
+        
+        else:
             print('EMPATE')
             return 0
         
-        elif verifica_k_linhas(tab_atual, ultima_pos_escolhida, jog, cfg[2]):
-            print('VITORIA')
-            return jog
-        
-        else:
-            print('DERROTA')
-            return -jog

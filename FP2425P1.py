@@ -809,4 +809,4 @@ def jogo_mnk(cfg, jog, lvl): # jog é jogador humano
         else:
             print('EMPATE')
             return 0
-    
+        
